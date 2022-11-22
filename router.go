@@ -10,7 +10,7 @@ type router struct {
 	trees map[string]*routeNode
 }
 
-type handleFunc func(ctx *Context)
+type HandleFunc func(ctx *Context)
 
 func newRouter() *router {
 	return &router{
@@ -18,7 +18,7 @@ func newRouter() *router {
 	}
 }
 
-func (r *router) addRoute(method string, path string, handler handleFunc) {
+func (r *router) addRoute(method string, path string, handler HandleFunc) {
 	if path == "" {
 		panic("web: 路由是空字符串")
 	}
@@ -57,6 +57,7 @@ func (r *router) addRoute(method string, path string, handler handleFunc) {
 		panic(fmt.Sprintf("web: 路由冲突[%s]", path))
 	}
 	root.handler = handler
+	root.route = path
 }
 
 func (r *router) findRoute(method string, path string) (*matchInfo, bool) {
@@ -97,12 +98,13 @@ func (r *router) findRoute(method string, path string) (*matchInfo, bool) {
 type routeNode struct {
 	path       string
 	children   map[string]*routeNode
-	handler    handleFunc
+	handler    HandleFunc
 	starChild  *routeNode
 	paramChild *routeNode
 	isEndStar  bool
 	regPattern string
 	regKey     string
+	route      string // 完整的路由
 }
 
 func (rn *routeNode) findChild(seg string) (*routeNode, bool, bool) {
